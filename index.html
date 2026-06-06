@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pomodoro Timer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --accent-work: #e94560;
+      --accent-break: #0f3460;
+      --accent-break-ring: #4ecca3;
+      --text: #eaeaea;
+      --muted: #8892b0;
+      --ring-size: 280px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    /* Mode tabs */
+    .modes {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--surface);
+      padding: 0.4rem;
+      border-radius: 999px;
+    }
+
+    .mode-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 0.45rem 1.2rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Ring */
+    .ring-wrapper {
+      position: relative;
+      width: var(--ring-size);
+      height: var(--ring-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: var(--surface);
+      stroke-width: 10;
+    }
+
+    .ring-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s linear, stroke 0.4s;
+    }
+
+    .timer-display {
+      text-align: center;
+      z-index: 1;
+    }
+
+    .timer-display .time {
+      font-size: 4.5rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+
+    .timer-display .label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 0.4rem;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .btn:active { transform: scale(0.95); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      font-size: 1rem;
+      padding: 0.75rem 2.5rem;
+      letter-spacing: 0.08em;
+    }
+
+    .btn-icon {
+      background: var(--surface);
+      color: var(--muted);
+      width: 44px;
+      height: 44px;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon:hover { color: var(--text); }
+
+    /* Sessions */
+    .sessions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .session-dots {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--muted);
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .dot.filled {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .sessions-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* Task input */
+    .task-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .task-area label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .task-area input {
+      background: var(--surface);
+      border: 1px solid #2a2a4a;
+      color: var(--text);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .task-area input:focus {
+      border-color: var(--accent);
+    }
+
+    .task-area input::placeholder {
+      color: var(--muted);
+    }
+
+    /* Responsive ring sizing */
+    @media (max-width: 400px) {
+      :root { --ring-size: 230px; }
+      .timer-display .time { font-size: 3.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Pomodoro</h1>
+
+  <div class="modes">
+    <button class="mode-btn active" data-mode="work">Focus</button>
+    <button class="mode-btn" data-mode="short">Short Break</button>
+    <button class="mode-btn" data-mode="long">Long Break</button>
+  </div>
+
+  <div class="ring-wrapper">
+    <svg class="ring-svg" viewBox="0 0 280 280">
+      <circle class="ring-bg" cx="140" cy="140" r="128" />
+      <circle class="ring-progress" id="ring" cx="140" cy="140" r="128" />
+    </svg>
+    <div class="timer-display">
+      <div class="time" id="time-display">25:00</div>
+      <div class="label" id="mode-label">Time to focus!</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-icon" id="skip-btn" title="Skip">&#9654;&#9654;</button>
+    <button class="btn btn-primary" id="start-btn">START</button>
+    <button class="btn btn-icon" id="reset-btn" title="Reset">&#8635;</button>
+  </div>
+
+  <div class="sessions">
+    <div class="session-dots" id="dots"></div>
+    <div class="sessions-label" id="sessions-label">Session 1 of 4</div>
+  </div>
+
+  <div class="task-area">
+    <label for="task-input">Current task</label>
+    <input id="task-input" type="text" placeholder="What are you working on?" maxlength="80" />
+  </div>
+
+  <script>
+    const MODES = {
+      work:  { label: 'Time to focus!',  minutes: 25, accent: '#e94560',  ringAccent: '#e94560'  },
+      short: { label: 'Short break!',    minutes: 5,  accent: '#4ecca3',  ringAccent: '#4ecca3'  },
+      long:  { label: 'Long break!',     minutes: 15, accent: '#4ecca3',  ringAccent: '#4ecca3'  },
+    };
+
+    const SESSIONS_PER_CYCLE = 4;
+    const CIRCUMFERENCE = 2 * Math.PI * 128; // r=128
+
+    let currentMode = 'work';
+    let secondsLeft = MODES.work.minutes * 60;
+    let totalSeconds = secondsLeft;
+    let running = false;
+    let interval = null;
+    let sessionsCompleted = 0;
+
+    const timeDisplay = document.getElementById('time-display');
+    const modeLabel   = document.getElementById('mode-label');
+    const ring        = document.getElementById('ring');
+    const startBtn    = document.getElementById('start-btn');
+    const resetBtn    = document.getElementById('reset-btn');
+    const skipBtn     = document.getElementById('skip-btn');
+    const dotsEl      = document.getElementById('dots');
+    const sessionsLabelEl = document.getElementById('sessions-label');
+
+    ring.style.strokeDasharray = CIRCUMFERENCE;
+
+    function setAccent(color) {
+      document.documentElement.style.setProperty('--accent', color);
+    }
+
+    function applyMode(mode) {
+      currentMode = mode;
+      const cfg = MODES[mode];
+      secondsLeft = cfg.minutes * 60;
+      totalSeconds = secondsLeft;
+      modeLabel.textContent = cfg.label;
+      setAccent(cfg.accent);
+      updateDisplay();
+      updateRing();
+      document.querySelectorAll('.mode-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+    }
+
+    function updateDisplay() {
+      const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+      const s = (secondsLeft % 60).toString().padStart(2, '0');
+      timeDisplay.textContent = `${m}:${s}`;
+      document.title = `${m}:${s} — Pomodoro`;
+    }
+
+    function updateRing() {
+      const ratio = secondsLeft / totalSeconds;
+      ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - ratio);
+    }
+
+    function updateDots() {
+      dotsEl.innerHTML = '';
+      for (let i = 0; i < SESSIONS_PER_CYCLE; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot' + (i < sessionsCompleted % SESSIONS_PER_CYCLE || (sessionsCompleted > 0 && sessionsCompleted % SESSIONS_PER_CYCLE === 0 && i < SESSIONS_PER_CYCLE) ? ' filled' : '');
+        dotsEl.appendChild(d);
+      }
+      sessionsLabelEl.textContent = `Session ${(sessionsCompleted % SESSIONS_PER_CYCLE) + 1} of ${SESSIONS_PER_CYCLE}`;
+    }
+
+    function tick() {
+      if (secondsLeft <= 0) {
+        clearInterval(interval);
+        running = false;
+        startBtn.textContent = 'START';
+        onTimerEnd();
+        return;
+      }
+      secondsLeft--;
+      updateDisplay();
+      updateRing();
+    }
+
+    function onTimerEnd() {
+      if (currentMode === 'work') {
+        sessionsCompleted++;
+        updateDots();
+        const isLong = sessionsCompleted % SESSIONS_PER_CYCLE === 0;
+        applyMode(isLong ? 'long' : 'short');
+      } else {
+        applyMode('work');
+      }
+      // Auto-start the next phase
+      startTimer();
+    }
+
+    function startTimer() {
+      if (running) return;
+      running = true;
+      startBtn.textContent = 'PAUSE';
+      interval = setInterval(tick, 1000);
+    }
+
+    function pauseTimer() {
+      running = false;
+      startBtn.textContent = 'START';
+      clearInterval(interval);
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      secondsLeft = totalSeconds;
+      updateDisplay();
+      updateRing();
+    }
+
+    function skipTimer() {
+      pauseTimer();
+      secondsLeft = 0;
+      onTimerEnd();
+    }
+
+    startBtn.addEventListener('click', () => {
+      running ? pauseTimer() : startTimer();
+    });
+
+    resetBtn.addEventListener('click', resetTimer);
+    skipBtn.addEventListener('click', skipTimer);
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pauseTimer();
+        applyMode(btn.dataset.mode);
+      });
+    });
+
+    // Init
+    setAccent(MODES.work.accent);
+    updateDisplay();
+    updateRing();
+    updateDots();
+  </script>
+</body>
+</html>
