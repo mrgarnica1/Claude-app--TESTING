@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icon-192.png" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <!-- ONESIGNAL_HEAD_SNIPPET_GOES_HERE -->
 <title>Europe 2026 · Gonzalez-Garnica</title>
 <style>
@@ -223,6 +224,27 @@
   .alertbtn:disabled{opacity:.85;cursor:default}
   .list{padding:14px 16px 8px;display:flex;flex-direction:column;gap:13px}
 
+  /* ---------- Map ---------- */
+  .mapwrap{height:min(58vh,520px);margin:14px 16px 8px;border-radius:18px;overflow:hidden;
+    border:1px solid var(--line);box-shadow:var(--shadow);position:relative;background:var(--card)}
+  .mapfallback{padding:44px 22px;text-align:center;color:var(--sub);font-size:13px;line-height:1.5}
+  .legend{display:flex;flex-wrap:wrap;gap:7px;margin:0 16px 20px}
+  .legend .lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+    padding:5px 10px 5px 6px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--sub)}
+  .legend .lg .n{width:17px;height:17px;border-radius:50%;background:linear-gradient(145deg,var(--orange2),var(--orange));
+    color:var(--orange-ink);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .leaflet-container{background:var(--bg);font-family:inherit}
+  .leaflet-popup-content-wrapper{background:var(--card);color:var(--ink);border-radius:12px;box-shadow:var(--shadow)}
+  .leaflet-popup-content{margin:10px 12px;font-size:12.5px;line-height:1.4}
+  .leaflet-popup-content b{font-size:13.5px;font-weight:800}
+  .leaflet-popup-tip{background:var(--card)}
+  .leaflet-control-attribution{background:rgba(14,14,14,.7)!important;color:var(--faint)!important;font-size:9px!important}
+  .leaflet-control-attribution a{color:var(--sub)!important}
+  .leaflet-control-zoom a{background:var(--card)!important;color:var(--ink)!important;border-color:var(--line)!important}
+  .stopnum{width:26px;height:26px;border-radius:50%;background:linear-gradient(145deg,var(--orange2),var(--orange));
+    color:var(--orange-ink);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 10px -3px rgba(0,0,0,.6);border:2px solid #1a1a1a}
+
   .wcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 16px;
     box-shadow:var(--shadow)}
   .wc-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
@@ -313,6 +335,7 @@
 
 <nav class="tabbar" id="tabbar">
   <button data-tab="itinerary" class="on"><span class="ti">🧭</span><span class="tl">Itinerary</span></button>
+  <button data-tab="map"><span class="ti">🗺️</span><span class="tl">Map</span></button>
   <button data-tab="flights"><span class="ti">✈️</span><span class="tl">Flights</span></button>
   <button data-tab="stays"><span class="ti">🏨</span><span class="tl">Stays</span></button>
   <button data-tab="bookings"><span class="ti">🎟️</span><span class="tl">Bookings</span></button>
@@ -320,6 +343,7 @@
 
 <div class="toast" id="toast">Copied</div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 /* ============================================================ DATA ============================================================ */
 const TINT={
@@ -540,6 +564,21 @@ const CHECKLIST=[
     {id:"holdbags",t:"Confirm Holiday Inn luggage hold",hint:"After Oct 1 checkout"}]}
 ];
 
+const MAPSTOPS=[
+  {name:"Los Angeles",sub:"Depart LAX · Sep 14",lat:33.9416,lng:-118.4085,theme:"sky"},
+  {name:"Barcelona",sub:"Sep 15 – 17",lat:41.3851,lng:2.1734,theme:"barcelona"},
+  {name:"Rome",sub:"Sep 17 – 20",lat:41.9028,lng:12.4964,theme:"rome"},
+  {name:"Civitavecchia",sub:"Board Odyssey of the Seas · Sep 20",lat:42.0942,lng:11.7958,theme:"sea"},
+  {name:"Santorini",sub:"Sep 22 · ashore 1:30–10:30 PM",lat:36.3932,lng:25.4615,theme:"santorini"},
+  {name:"Kuşadası (Ephesus)",sub:"Sep 23 · ashore 9:30 AM–5:30 PM",lat:37.856,lng:27.261,theme:"ephesus"},
+  {name:"Mykonos",sub:"Sep 24 · ashore 7:30 AM–5:30 PM",lat:37.4467,lng:25.3289,theme:"mykonos"},
+  {name:"Naples",sub:"Sep 26 · ashore 7:30 AM–5:30 PM",lat:40.8518,lng:14.2681,theme:"naples"},
+  {name:"Paris",sub:"Sep 27 – 30",lat:48.8566,lng:2.3522,theme:"paris"},
+  {name:"Newark",sub:"Sep 30 – Oct 1",lat:40.6895,lng:-74.1745,theme:"nyc"},
+  {name:"New York City",sub:"Oct 1 layover",lat:40.7128,lng:-74.006,theme:"nyc"},
+  {name:"Los Angeles",sub:"Arrive home · Oct 1",lat:33.9416,lng:-118.4085,theme:"sky"}
+];
+
 /* ============================================================ STATE ============================================================ */
 const state={tab:"itinerary",day:0,checks:{}};
 try{const s=localStorage.getItem("euro2026v2");if(s)state.checks=JSON.parse(s);}catch(e){}
@@ -730,11 +769,40 @@ function renderBookings(){
   </section>`;
 }
 
+/* ============================================================ MAP ============================================================ */
+let _map=null;
+function renderMap(){
+  $("#main").innerHTML=`<section class="view sview" style="${tintVars('sea')}">
+    <div class="shead"><div class="eb">18 days · 5 countries</div><h2><span class="x9">Route</span></h2>
+      <p>Tap a pin for dates. Drag &amp; pinch to explore — the line traces LA to LA in order.</p></div>
+    <div class="mapwrap"><div id="tripmap" style="height:100%"></div></div>
+    <div class="legend">${MAPSTOPS.map((s,i)=>`<span class="lg"><span class="n">${i+1}</span>${esc(s.name)}</span>`).join("")}</div>
+  </section>`;
+  if(typeof L==="undefined"){
+    $("#tripmap").outerHTML=`<div class="mapfallback">🗺️ The map needs an internet connection to load its tiles the first time — after that, it's cached and works offline like the rest of the app.</div>`;
+    return;
+  }
+  if(_map){_map.remove();_map=null;}
+  const map=L.map("tripmap",{scrollWheelZoom:false,tap:true});
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+    attribution:"&copy; OpenStreetMap &copy; CARTO",maxZoom:18
+  }).addTo(map);
+  const pts=MAPSTOPS.map(s=>[s.lat,s.lng]);
+  L.polyline(pts,{color:"#f26a1e",weight:2.5,opacity:.85,dashArray:"6 8"}).addTo(map);
+  MAPSTOPS.forEach((s,i)=>{
+    const icon=L.divIcon({className:"",html:`<div class="stopnum">${i+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+    L.marker([s.lat,s.lng],{icon}).addTo(map).bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.sub)}`);
+  });
+  map.fitBounds(pts,{padding:[26,26]});
+  _map=map;
+}
+
 /* ============================================================ ROUTER + EVENTS ============================================================ */
 function render(){
   document.querySelectorAll(".tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.tab===state.tab));
   renderRail();
   if(state.tab==="itinerary")renderDay();
+  else if(state.tab==="map")renderMap();
   else if(state.tab==="flights")renderFlights();
   else if(state.tab==="stays")renderStays();
   else renderBookings();
