@@ -194,6 +194,10 @@
     background:var(--orange-soft);color:var(--orange2);font-size:12px;letter-spacing:.02em;
     transition:transform .1s}
   .copy:active{transform:scale(.93)}
+  .linkbtn{display:inline-flex;align-items:center;gap:6px;font-weight:800;padding:6px 10px;border-radius:9px;
+    background:var(--orange-soft);color:var(--orange2);font-size:12px;letter-spacing:.02em;
+    text-decoration:none;transition:transform .1s}
+  .linkbtn:active{transform:scale(.93)}
 
   /* day nav */
   .daynav{display:flex;gap:10px;padding:12px 16px 26px}
@@ -461,7 +465,9 @@ const DAYS=[
        {t:"3:30",ap:"PM",k:"sight",ic:"🛍️",title:"Explore Prati",d:"Great shops & cafés in a relaxed local neighborhood."},
        {t:"4:30",ap:"PM",k:"free",ic:"💈",title:"Optional: haircut near the Airbnb",
         d:"Two well-reviewed, affordable options on Via San Giovanni in Laterano (~15–20 min walk, or ~5 min taxi): Barbiere Elia (Piazza San Giovanni in Laterano 46) or Ricciocapriccio (Via San Giovanni in Laterano 142). Small traditional shops — check hours/walk-in before heading over.",
-        tags:[["","Suggested · not booked"]]},
+        tags:[["","Suggested · not booked"]],
+        book:[["Barbiere Elia","https://www.fresha.com/lvp/barbiere-elia-piazza-san-giovanni-in-laterano-roma-Mx84vw","link"],
+              ["Ricciocapriccio","https://www.treatwell.it/salone/ricciocapriccio/","link"]]},
        {t:"7:00",ap:"PM",k:"taxi",title:"Dinner",d:""}]},
   {n:6,date:new Date(2026,8,19),wk:"Sat",dstr:"Sep 19",flag:"⛲",theme:"rome",hl:"Historic Rome",eb:"Rome",
    ev:[{t:"7:00",ap:"AM",k:"taxi",title:"Trevi Fountain",d:"~10 min from the Airbnb"},
@@ -480,7 +486,9 @@ const DAYS=[
        {t:"2:30",ap:"PM",k:"free",ic:"🛍️",title:"Free afternoon & souvenir shopping",d:"Wander the area at your own pace."},
        {t:"3:00",ap:"PM",k:"free",ic:"💈",title:"Optional: haircut near the Airbnb",
         d:"Same two options as Friday — Barbiere Elia (Piazza San Giovanni in Laterano 46) or Ricciocapriccio (Via San Giovanni in Laterano 142), ~15–20 min walk. This afternoon's open window is the easier fit before tonight's Crazy Pizza Rome dinner.",
-        tags:[["","Suggested · not booked"]]},
+        tags:[["","Suggested · not booked"]],
+        book:[["Barbiere Elia","https://www.fresha.com/lvp/barbiere-elia-piazza-san-giovanni-in-laterano-roma-Mx84vw","link"],
+              ["Ricciocapriccio","https://www.treatwell.it/salone/ricciocapriccio/","link"]]},
        {t:"7:00",ap:"PM",k:"taxi",title:"Crazy Pizza Rome",d:"~7 min · ~€18–22 · Via Veneto 167"},
        {t:"7:00",ap:"PM",k:"food",ic:"🍕",title:"Crazy Pizza Rome",booked:true,
         d:"Via Veneto 167 · 4 guests · 7:00–8:30pm. Table held max 15 min past reservation time!",
@@ -715,7 +723,8 @@ const MLB={walk:"Walk",taxi:"Taxi",metro:"Metro",train:"Train",ferry:"Ferry",tra
 function bookRows(rows){
   if(!rows)return"";
   const kv=rows.map(([k,v,c])=>`<div class="kv"><span class="k">${esc(k)}</span>`+
-    (c?`<button class="copy" data-copy="${esc(v)}">⧉ ${esc(v)}</button>`:`<span class="v">${esc(v)}</span>`)+`</div>`).join("");
+    (c==="link"?`<a class="linkbtn" href="${esc(v)}" target="_blank" rel="noopener noreferrer">Open ↗</a>`
+      :c?`<button class="copy" data-copy="${esc(v)}">⧉ ${esc(v)}</button>`:`<span class="v">${esc(v)}</span>`)+`</div>`).join("");
   return`<details class="book"><summary>Booking &amp; confirmation <span class="chev">›</span></summary><div style="margin-top:8px">${kv}</div></details>`;
 }
 function tagRow(tags){return tags?`<div class="tags">${tags.map(([c,l])=>`<span class="tag ${c}">${esc(l)}</span>`).join("")}</div>`:"";}
