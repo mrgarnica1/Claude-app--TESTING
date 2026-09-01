@@ -225,11 +225,17 @@
   .list{padding:14px 16px 8px;display:flex;flex-direction:column;gap:13px}
 
   /* ---------- Map ---------- */
+  /* Pin the whole tab to exactly one screen (no page scroll) so dragging the
+     map can never carry the banner off-screen with it, and reserve the
+     status-bar safe area since the topbar (which used to do that) is hidden. */
+  #app.map-mode{min-height:0;height:100vh;height:100dvh;overflow:hidden}
   #app.map-mode .topbar{display:none}
-  .mheadbar{padding:22px 20px 18px}
+  #app.map-mode #main{height:100%}
+  #app.map-mode .view.sview{display:flex;flex-direction:column;height:100%}
+  .mheadbar{flex:none;padding:calc(22px + var(--safe-t)) 20px 18px}
   .mhsub{margin:8px 0 0;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);
     line-height:1.4;max-width:92%;text-shadow:0 1px 10px rgba(0,0,0,.3)}
-  .mapwrap{height:min(78vh,720px);margin:0;position:relative;background:var(--card)}
+  .mapwrap{flex:1;min-height:0;margin:0;position:relative;background:var(--card)}
   .mapfallback{padding:44px 22px;text-align:center;color:var(--sub);font-size:13px;line-height:1.5}
   .leaflet-container{background:var(--bg);font-family:inherit}
   .leaflet-popup-content-wrapper{background:var(--card);color:var(--ink);border-radius:12px;box-shadow:var(--shadow)}
@@ -248,7 +254,7 @@
     filter:drop-shadow(0 2px 7px rgba(0,0,0,.7)) drop-shadow(0 0 3px rgba(0,0,0,.5))}
 
   /* map step controls — floats fixed, stacked directly above the tab bar */
-  .mapctrls-spacer{height:var(--mapctrls-h,66px)}
+  .mapctrls-spacer{flex:none;height:var(--mapctrls-h,66px)}
   .mapctrls{position:fixed;left:0;right:0;bottom:var(--tabbar-h,64px);z-index:45;
     max-width:520px;margin:0 auto;display:flex;gap:10px;padding:10px 16px;
     background:rgba(14,14,14,.88);backdrop-filter:saturate(1.3) blur(16px);
