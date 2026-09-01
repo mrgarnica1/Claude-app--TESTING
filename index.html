@@ -869,10 +869,12 @@ function setMapCtrlsBusy(busy){
   document.querySelectorAll(".mapctrls button").forEach(b=>b.disabled=busy);
   if(!busy)syncMapUI();
 }
+const MAP_CITY_ZOOM=10;
 function animateMapLeg(fromIdx,toIdx,cb){
   const gen=++_mapGen,from=MAPSTOPS[fromIdx],to=MAPSTOPS[toIdx];
   const mode=MAPSTOPS[Math.max(fromIdx,toIdx)].mode||"flight";
   const rotate=mode==="flight"?`transform:rotate(${bearingDeg(from.lat,from.lng,to.lat,to.lng)-45}deg)`:"";
+  _map.flyTo([to.lat,to.lng],MAP_CITY_ZOOM,{duration:0.9}); // camera zooms into the destination as we travel
   if(_mapVehicle)_map.removeLayer(_mapVehicle);
   _mapVehicle=L.marker([from.lat,from.lng],{
     icon:L.divIcon({className:"",html:`<div class="vehicle-icon" style="${rotate}">${MODE_ICON[mode]}</div>`,iconSize:[26,26],iconAnchor:[13,13]}),
@@ -901,6 +903,7 @@ function mapBack(){
 function mapStart(){
   if(!_map)return;
   _mapGen++; // cancel any leg in flight
+  _map.flyToBounds(MAPSTOPS.map(s=>[s.lat,s.lng]),{padding:[26,26],duration:0.9}); // back to the world overview
   drawMapStep(0);
 }
 
