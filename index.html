@@ -638,6 +638,31 @@ const CHECKLIST=[
     {id:"holdbags",t:"Confirm Holiday Inn luggage hold",hint:"After Oct 1 checkout"}]}
 ];
 
+const PACKING=[
+  {group:"Documents",fl:"🛂",items:[
+    {id:"pk-passports",t:"Passports for everyone",hint:"Check 6+ months validity beyond Oct 1"},
+    {id:"pk-passportcopies",t:"Copies of passports",hint:"Physical + a photo saved on your phone, stored separately"},
+    {id:"pk-cruisedocs",t:"Cruise SetSail Pass & boarding docs",hint:"Royal Caribbean app, or printed as backup"},
+    {id:"pk-insurance",t:"Travel insurance info",hint:"Save the policy & claims numbers offline"}]},
+  {group:"Money",fl:"💶",items:[
+    {id:"pk-eurocash",t:"€445+ cash for the van transfers",hint:"€225 Rome→Civitavecchia + €220 Civitavecchia→FCO"},
+    {id:"pk-cardnotify",t:"Notify your bank/cards of travel dates",hint:"Spain, Italy, Greece, Turkey, France, USA"},
+    {id:"pk-nofeecard",t:"A no-foreign-transaction-fee card",hint:"For onboard charges & shopping"}]},
+  {group:"Electronics",fl:"🔌",items:[
+    {id:"pk-adapter",t:"EU plug adapters (Type C/F)",hint:"Spain, Italy & France all use these"},
+    {id:"pk-powerstrip",t:"Non-surge-protector power strip",hint:"Royal Caribbean allows these, not surge protectors"},
+    {id:"pk-powerbank",t:"Portable charger / power bank",hint:"For the long transatlantic flights"},
+    {id:"pk-esim",t:"International data plan or eSIM",hint:"For 5 countries plus the days at sea"}]},
+  {group:"Health & Comfort",fl:"🩹",items:[
+    {id:"pk-meds",t:"Prescriptions (18 days + buffer)",hint:"Keep in carry-on, original bottles"},
+    {id:"pk-seasick",t:"Motion sickness remedies",hint:"For the 2 sea days & tender ports"},
+    {id:"pk-shoes",t:"Broken-in walking shoes",hint:"This itinerary is very walk-heavy"},
+    {id:"pk-layer",t:"Light rain layer",hint:"Paris & NYC run cooler with a real chance of rain"}]},
+  {group:"For the boys",fl:"🧸",items:[
+    {id:"pk-entertainment",t:"Flight entertainment & snacks",hint:"11+ hour LAX–Barcelona leg"},
+    {id:"pk-comfort",t:"A comfort item for sleep",hint:"New beds every few nights"}]}
+];
+
 /* mode = how you traveled FROM the previous stop TO this one (null for the trip's origin)
    date = short arrival-date label shown on the map timeline */
 const MAPSTOPS=[
@@ -826,6 +851,12 @@ function renderStays(){
       </div>`).join("")}</div>
   </section>`;
 }
+function checklistHTML(list){
+  return list.map(g=>`<div class="cgt"><span class="f">${g.fl}</span>${esc(g.group)}</div>`+
+    g.items.map(it=>{const done=!!state.checks[it.id];
+      return`<div class="todo ${done?"done":""}" data-check="${it.id}"><div class="box">${done?"✓":""}</div>
+        <div><div class="tt">${esc(it.t)}</div><div class="hint">${esc(it.hint)}</div></div></div>`;}).join("")).join("");
+}
 function renderBookings(){
   const tours=BOOKED.map(b=>`
     <div class="wcard btour" style="${tintVars(b.theme)}">
@@ -836,10 +867,6 @@ function renderBookings(){
         <button class="copy" data-copy="${esc(b.ref)}">⧉ ${esc(b.ref)}</button>
         ${b.exp?`<button class="copy" data-copy="${esc(b.exp)}">⧉ Exp</button>`:""}</span></div>
     </div>`).join("");
-  const groups=CHECKLIST.map(g=>`<div class="cgt"><span class="f">${g.fl}</span>${esc(g.group)}</div>`+
-    g.items.map(it=>{const done=!!state.checks[it.id];
-      return`<div class="todo ${done?"done":""}" data-check="${it.id}"><div class="box">${done?"✓":""}</div>
-        <div><div class="tt">${esc(it.t)}</div><div class="hint">${esc(it.hint)}</div></div></div>`;}).join("")).join("");
   $("#main").innerHTML=`<section class="view sview" style="${tintVars('barcelona')}">
     <div class="shead"><div class="eb">Confirmed &amp; to-do</div><h2><span class="x9">Bookings</span></h2>
       <p>${BOOKED.length} tours locked in. Tick off the rest as you reserve them — your checkmarks save on this device.</p>
@@ -848,7 +875,9 @@ function renderBookings(){
       <button class="alertbtn" onclick="enableTripAlerts(this)">🔔 Enable Trip Alerts</button></div>
     <div class="list">${tours}</div>
     <div class="cgt" style="margin-top:24px"><span class="f">📋</span>Still to book</div>
-    ${groups}
+    ${checklistHTML(CHECKLIST)}
+    <div class="cgt" style="margin-top:24px"><span class="f">🧳</span>Travel-ready checklist</div>
+    ${checklistHTML(PACKING)}
     <div style="height:22px"></div>
   </section>`;
 }
